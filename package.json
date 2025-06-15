@@ -1,0 +1,16 @@
+{
+  "name": "un-react",
+  "version": "1.0.0",
+  "description": "a react like framework implimentation from scratch",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel index.html"
+  },
+  "author": "avi892nash",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.25.2",
+    "parcel": "^2.12.0"
+  }
+}
