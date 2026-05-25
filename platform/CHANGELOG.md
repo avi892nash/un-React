@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/avi892nash/un-React/compare/v1.0.0...v1.0.1) (2026-05-25)
+
+### Bug Fixes
+
+* change default port from 3000 to 28291 ([0e94306](https://github.com/avi892nash/un-React/commit/0e94306a699a5ea7d2477f1603fde5adea37a4ee))
+
 ## 1.0.0 (2026-05-25)
 
 ### Features
