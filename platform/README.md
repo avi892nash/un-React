@@ -20,14 +20,14 @@ curl -fsSL https://github.com/avi892nash/un-React/releases/latest/download/unrea
   && sudo apt install -y /tmp/unreact-platform.deb
 ```
 
-That's it — the service is up at <http://localhost:3000>. From now on, the bundled `unreact-platform-update.timer` polls `/releases/latest` every 30 min (with up to 10 min of jitter) and applies new versions automatically.
+That's it — the service is up at <http://localhost:28291>. From now on, the bundled `unreact-platform-update.timer` polls `/releases/latest` every 30 min (with up to 10 min of jitter) and applies new versions automatically.
 
 #### Raspberry Pi specifics
 
 The .deb works on Pi 3 / 4 / 5 out of the box. Two things worth knowing:
 
-- **Port 80**: the default is `PORT=3000`. To bind 80 you either need to (a) edit `/etc/unreact-platform/unreact-platform.env` and add `CAP_NET_BIND_SERVICE` to the systemd unit, or (b) front the service with nginx / Caddy doing 80→3000 reverse-proxy (recommended for HTTPS).
-- **Access from your LAN**: defaults to `HOSTNAME=0.0.0.0` so it's reachable at `http://<pi-hostname>.local:3000` or the Pi's IP without further config.
+- **Port 80**: the default is `PORT=28291`. To bind 80 you either need to (a) edit `/etc/unreact-platform/unreact-platform.env` and add `CAP_NET_BIND_SERVICE` to the systemd unit, or (b) front the service with nginx / Caddy doing 80→28291 reverse-proxy (recommended for HTTPS).
+- **Access from your LAN**: defaults to `HOSTNAME=0.0.0.0` so it's reachable at `http://<pi-hostname>.local:28291` or the Pi's IP without further config.
 
 ### How auto-upgrade works
 
@@ -46,7 +46,7 @@ journalctl -u unreact-platform -f                       # tail server logs
 systemctl list-timers unreact-platform-update.timer     # when's the next upgrade check?
 sudo systemctl disable --now unreact-platform-update.timer  # opt out of auto-upgrade
 sudo /usr/bin/unreact-platform-update                   # force an upgrade check now
-curl http://localhost:3000/healthz                      # liveness probe (returns 'ok')
+curl http://localhost:28291/healthz                      # liveness probe (returns 'ok')
 ```
 
 ### Configuration
@@ -61,7 +61,7 @@ sudo systemctl restart unreact-platform
 Defaults:
 
 ```ini
-PORT=3000
+PORT=28291
 HOSTNAME=0.0.0.0
 NODE_ENV=production
 ```
@@ -85,7 +85,7 @@ Other scripts:
 
 ```bash
 npm run build        # produce dist/
-npm run start        # run server.mjs against the built dist/ (port 3000)
+npm run start        # run server.mjs against the built dist/ (port 28291)
 npm test             # 22 tests: diff, transform, curriculum guardrail
 npm run typecheck    # tsc --noEmit
 npm run package:deb  # build a .deb locally (requires nfpm — see below)

@@ -10,7 +10,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const PORT = Number(process.env.PORT ?? 3000);
+const PORT = Number(process.env.PORT ?? 28291);
 const HOSTNAME = process.env.HOSTNAME ?? '0.0.0.0';
 
 // In dev: __dirname is `platform/`, ROOT is `platform/dist/`.

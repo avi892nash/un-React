@@ -57,7 +57,7 @@ unreact-platform installed successfully.
   Auto-upgrade:   systemctl list-timers unreact-platform-update.timer
   Configure:      /etc/unreact-platform/unreact-platform.env (then: systemctl restart unreact-platform)
 
-Default URL:      http://localhost:3000
+Default URL:      http://localhost:28291
 
 EOF
 
