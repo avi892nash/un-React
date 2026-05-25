@@ -1,0 +1,12 @@
+[Unit]
+Description=unreact-platform — Check and apply update from GitHub Releases
+Documentation=https://github.com/avi892nash/un-React
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/unreact-platform-update
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=unreact-platform-update
