@@ -141,9 +141,10 @@ export function CompletionView({ steps, platformState, onStateChange, onBack }: 
           <button
             type="button"
             onClick={onBack}
-            className="text-on-surface-variant hover:text-on-surface text-body-md cursor-pointer"
+            className="text-on-surface-variant hover:text-on-surface text-body-md cursor-pointer inline-flex items-center gap-1"
           >
-            ← back to curriculum
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">arrow_back</span>
+            back to curriculum
           </button>
         </div>
       </div>

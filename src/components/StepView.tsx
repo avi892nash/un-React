@@ -338,11 +338,25 @@ export function StepView({ step, platformState, onStateChange, exposeApi }: Prop
                 {stepNum} · {stepSlug}
               </span>
               <h1 className="font-headline-xl text-headline-xl text-on-surface">{step.title}</h1>
-              <div className="font-label-sm text-label-sm text-on-surface-variant opacity-70">
-                attempts {stepRec.attempts}
-                {' · '}
-                hints {stepRec.hintsRevealed}/{step.hints.length}
-                {stepRec.passed && ' · ✓ passed'}
+              <div className="font-label-sm text-label-sm text-on-surface-variant opacity-70 flex items-center gap-1.5">
+                <span>attempts {stepRec.attempts}</span>
+                <span aria-hidden="true">·</span>
+                <span>hints {stepRec.hintsRevealed}/{step.hints.length}</span>
+                {stepRec.passed && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="inline-flex items-center gap-1 text-pass">
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                        aria-hidden="true"
+                      >
+                        check_circle
+                      </span>
+                      passed
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
