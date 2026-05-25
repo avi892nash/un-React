@@ -20,7 +20,7 @@ curl -fsSL https://github.com/avi892nash/un-React/releases/latest/download/unrea
   && sudo apt install -y /tmp/unreact-platform.deb
 ```
 
-That's it — the service is up at <http://localhost:28291>. From now on, the bundled `unreact-platform-update.timer` polls `/releases/latest` every 30 min (with up to 10 min of jitter) and applies new versions automatically.
+That's it — the service is up at <http://localhost:28291>. From now on, the bundled `unreact-platform-update.timer` polls `/releases/latest` every 5 min (with up to 1 min of jitter) and applies new versions automatically.
 
 #### Raspberry Pi specifics
 
@@ -36,7 +36,7 @@ The install enables two systemd units:
 | Unit | What it does |
 | --- | --- |
 | `unreact-platform.service` | Runs `node /opt/unreact-platform/server.cjs` (hardened: dedicated `unreact-platform` user, `PrivateTmp`, `ProtectSystem=strict`, `MemoryDenyWriteExecute`, …) |
-| `unreact-platform-update.timer` | Every 30 min: `/usr/bin/unreact-platform-update` polls the GitHub Releases API, compares `tag_name` against `/var/lib/unreact-platform/installed-tag`, and `apt install`s the new `.deb` if they differ |
+| `unreact-platform-update.timer` | Every 5 min: `/usr/bin/unreact-platform-update` polls the GitHub Releases API, compares `tag_name` against `/var/lib/unreact-platform/installed-tag`, and `apt install`s the new `.deb` if they differ |
 
 ### Common operations
 
@@ -148,7 +148,7 @@ npm run release:dry    # prints what semantic-release would do, without doing it
 /lib/systemd/system/
   ├─ unreact-platform.service          # main service unit (hardened)
   ├─ unreact-platform-update.service   # oneshot updater
-  └─ unreact-platform-update.timer     # 30-min poll, 10-min jitter
+  └─ unreact-platform-update.timer     # 5-min poll, 1-min jitter
 
 /usr/bin/unreact-platform-update       # the GitHub Releases poller
 /etc/unreact-platform/unreact-platform.env   # user-editable conffile
