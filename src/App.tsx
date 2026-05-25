@@ -38,6 +38,9 @@ export default function App() {
 
   const stepIds = steps.map((s) => s.id);
   const allPassed = isAllPassed(platformState, stepIds);
+  const passedStepIds = new Set(
+    stepIds.filter((id) => platformState.perStep[id]?.passed),
+  );
 
   // Auto-jump to completion the moment the user passes the last step. Only
   // fires once per session — once they've seen it they can navigate freely.
@@ -74,6 +77,7 @@ export default function App() {
         <SideNav
           steps={steps}
           currentStepId={step.id}
+          passedStepIds={passedStepIds}
           allPassed={allPassed}
           activeView={view}
           onSelectStep={(id) => {

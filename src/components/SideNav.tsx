@@ -58,6 +58,8 @@ const CURRICULUM: Stage[] = [
 interface Props {
   steps: Step[];
   currentStepId: string;
+  /** Step ids the learner has already passed at least once. */
+  passedStepIds: Set<string>;
   /** True once every implemented step has been passed at least once. */
   allPassed: boolean;
   /** Which top-level view is active — curriculum or completion. */
@@ -67,19 +69,45 @@ interface Props {
   onSelectCurriculum: () => void;
 }
 
-type StepState = 'current' | 'available' | 'planned';
+/**
+ * - `passed`    — implemented AND in passedStepIds
+ * - `current`   — the step the curriculum view is showing right now
+ * - `available` — implemented, not passed, and the previous step in the
+ *                 curriculum has been passed (or this is the first step)
+ * - `locked`    — implemented, but a prerequisite earlier step has not
+ *                 yet been passed
+ * - `planned`   — not implemented in src/steps/ yet
+ */
+type StepState = 'passed' | 'current' | 'available' | 'locked' | 'planned';
 
-function stateFor(stepId: string, implemented: Set<string>, currentStepId: string): StepState {
+const FLAT_CURRICULUM: PlannedStep[] = CURRICULUM.flatMap((s) => s.steps);
+const TOTAL_STEPS = FLAT_CURRICULUM.length;
+
+function stateFor(
+  stepId: string,
+  implemented: Set<string>,
+  passedStepIds: Set<string>,
+  currentStepId: string,
+): StepState {
+  if (!implemented.has(stepId)) return 'planned';
   if (stepId === currentStepId) return 'current';
-  if (implemented.has(stepId)) return 'available';
-  return 'planned';
+  if (passedStepIds.has(stepId)) return 'passed';
+  // Gate on the immediately-previous curriculum entry. If that previous
+  // entry isn't implemented yet we don't gate (no way to satisfy a
+  // prerequisite that doesn't exist) — we still let the learner try this
+  // one. If it IS implemented but not yet passed, this step is locked.
+  const i = FLAT_CURRICULUM.findIndex((s) => s.id === stepId);
+  const prev = i > 0 ? FLAT_CURRICULUM[i - 1] : undefined;
+  if (!prev || !implemented.has(prev.id) || passedStepIds.has(prev.id)) {
+    return 'available';
+  }
+  return 'locked';
 }
-
-const TOTAL_STEPS = CURRICULUM.reduce((n, s) => n + s.steps.length, 0);
 
 export function SideNav({
   steps,
   currentStepId,
+  passedStepIds,
   allPassed,
   activeView,
   onSelectStep,
@@ -87,6 +115,10 @@ export function SideNav({
   onSelectCurriculum,
 }: Props) {
   const implemented = new Set(steps.map((s) => s.id));
+  const passedCount = FLAT_CURRICULUM.reduce(
+    (n, s) => n + (passedStepIds.has(s.id) ? 1 : 0),
+    0,
+  );
   const availableCount = implemented.size;
 
   return (
@@ -117,21 +149,39 @@ export function SideNav({
             Progress
           </span>
           <span className="font-label-sm text-label-sm text-on-surface">
-            {availableCount} / {TOTAL_STEPS}
+            {passedCount} / {TOTAL_STEPS}
           </span>
         </div>
+        {/*
+          Two-layer bar:
+            · Background — full track (gray).
+            · Middle layer — outline showing how many steps are even
+              implemented yet (so the learner sees the "available zone").
+            · Foreground amber — the actual completion (passedCount).
+          Makes "you've passed 0 of 8, 2 are available, 6 are planned"
+          legible at a glance without a wall of numbers.
+        */}
         <div
-          className="h-1 rounded-full bg-surface-container-high overflow-hidden"
+          className="relative h-1 rounded-full bg-surface-container-high overflow-hidden"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={TOTAL_STEPS}
-          aria-valuenow={availableCount}
-          aria-label={`${availableCount} of ${TOTAL_STEPS} steps available`}
+          aria-valuenow={passedCount}
+          aria-label={`${passedCount} of ${TOTAL_STEPS} steps passed; ${availableCount} available`}
         >
           <div
-            className="h-full bg-tertiary transition-all duration-500 ease-out"
+            className="absolute inset-y-0 left-0 bg-surface-bright/60 transition-all duration-500 ease-out"
             style={{ width: `${(availableCount / TOTAL_STEPS) * 100}%` }}
+            aria-hidden="true"
           />
+          <div
+            className="absolute inset-y-0 left-0 bg-tertiary transition-all duration-500 ease-out"
+            style={{ width: `${(passedCount / TOTAL_STEPS) * 100}%` }}
+            aria-hidden="true"
+          />
+        </div>
+        <div className="mt-1.5 font-label-sm text-label-sm text-on-surface-variant opacity-60">
+          {availableCount} available · {TOTAL_STEPS - availableCount} planned
         </div>
       </div>
 
@@ -143,20 +193,25 @@ export function SideNav({
             </h3>
             <ul className="flex flex-col">
               {stage.steps.map((s) => {
-                const state = activeView === 'completion'
-                  ? // When the completion page is active, don't highlight any step as "current"
-                    (implemented.has(s.id) ? 'available' : 'planned')
-                  : stateFor(s.id, implemented, currentStepId);
+                let state = stateFor(s.id, implemented, passedStepIds, currentStepId);
+                // When the completion view is the active view, don't highlight
+                // any step as "current" — the user is no longer in any step.
+                if (activeView === 'completion' && state === 'current') {
+                  state = passedStepIds.has(s.id) ? 'passed' : 'available';
+                }
+                // Clickable iff the step is "open" — passed steps can be
+                // revisited; current + available + locked NO (current is
+                // already shown; locked is locked; planned doesn't exist).
+                const onSelect =
+                  state === 'available' || state === 'passed'
+                    ? () => onSelectStep(s.id)
+                    : undefined;
                 return (
                   <StepRow
                     key={s.id}
                     label={s.label}
                     state={state}
-                    onSelect={
-                      implemented.has(s.id)
-                        ? () => onSelectStep(s.id)
-                        : undefined
-                    }
+                    onSelect={onSelect}
                   />
                 );
               })}
@@ -231,31 +286,38 @@ function StepRow({
 }: {
   label: string;
   state: StepState;
-  /** Provided only for implemented steps (current + available). */
+  /** Provided only when the row is actionable (available or passed). */
   onSelect?: () => void;
 }) {
-  const isCurrent  = state === 'current';
-  const isPlanned  = state === 'planned';
+  const rowClass =
+    state === 'current'   ? 'bg-primary-container text-on-primary-container rounded-lg transition-colors'
+  : state === 'passed'    ? 'text-on-surface hover:bg-surface-container-highest rounded-lg cursor-pointer transition-colors'
+  : state === 'available' ? 'text-on-surface hover:bg-surface-container-highest rounded-lg cursor-pointer transition-colors'
+  : state === 'locked'    ? 'text-on-surface-variant opacity-60 cursor-not-allowed'
+  : /* planned */           'text-on-surface-variant opacity-50';
 
-  const rowClass = isCurrent
-    ? 'bg-primary-container text-on-primary-container rounded-lg transition-colors'
-    : isPlanned
-      ? 'text-on-surface-variant opacity-50'
-      : 'text-on-surface hover:bg-surface-container-highest rounded-lg cursor-pointer transition-colors';
+  const title =
+    state === 'locked' ? 'Pass the previous step to unlock'
+  : state === 'planned' ? 'Coming soon — not yet implemented in this build'
+  : undefined;
 
   const content = (
     <>
       <Bullet state={state} />
-      <span className="font-body-md text-body-md truncate">{label}</span>
+      <span className="font-body-md text-body-md truncate flex-1">{label}</span>
     </>
   );
 
-  // Planned (locked) steps render as a non-interactive li; implemented ones
-  // render as a button so the keyboard + screen reader treat them as
-  // actionable.
+  // Non-actionable rows (locked, planned, the active 'current') render as
+  // <li> so they're not picked up as buttons by the keyboard / SR. Only
+  // actionable rows (available, passed) get a <button>.
   if (!onSelect) {
     return (
-      <li className={`mx-2 px-3 py-2 flex items-center gap-3 ${rowClass}`}>
+      <li
+        className={`mx-2 px-3 py-2 flex items-center gap-3 ${rowClass}`}
+        title={title}
+        aria-current={state === 'current' ? 'page' : undefined}
+      >
         {content}
       </li>
     );
@@ -265,8 +327,8 @@ function StepRow({
       <button
         type="button"
         onClick={onSelect}
-        aria-current={isCurrent ? 'page' : undefined}
         className={`w-full text-left mx-2 px-3 py-2 flex items-center gap-3 ${rowClass}`}
+        title={title}
       >
         {content}
       </button>
@@ -275,6 +337,19 @@ function StepRow({
 }
 
 function Bullet({ state }: { state: StepState }) {
+  if (state === 'passed') {
+    // Filled green check from Material Symbols. Same icon-as-bullet trick
+    // as the "Certificate" entry to keep the visual language consistent.
+    return (
+      <span
+        className="material-symbols-outlined text-pass text-sm shrink-0"
+        style={{ fontVariationSettings: "'FILL' 1" }}
+        aria-label="passed"
+      >
+        check_circle
+      </span>
+    );
+  }
   if (state === 'current') {
     return (
       <span
@@ -291,10 +366,21 @@ function Bullet({ state }: { state: StepState }) {
       />
     );
   }
+  if (state === 'locked') {
+    return (
+      <span
+        className="material-symbols-outlined text-on-surface-variant text-sm shrink-0 opacity-80"
+        aria-label="locked — finish previous step"
+      >
+        lock
+      </span>
+    );
+  }
+  // planned
   return (
     <span
       className="w-2.5 h-2.5 rounded-full border border-dashed border-on-surface-variant shrink-0"
-      aria-label="planned step"
+      aria-label="planned"
     />
   );
 }
