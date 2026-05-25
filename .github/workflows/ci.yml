@@ -147,32 +147,93 @@ jobs:
             { echo "FAIL: /usr/bin/unreact-platform-update missing or not executable"; exit 1; }
           echo "PASS: unreact-platform-update present + executable"
 
-      - name: Start server + smoke-test endpoints
+      - name: Verify postinstall artifacts (user, files, installed-tag)
         run: |
-          NODE_ENV=production HOSTNAME=0.0.0.0 PORT=19877 \
-            node /opt/unreact-platform/server.cjs &
-          PID=$!
-          trap 'kill $PID 2>/dev/null || true' EXIT
-          for i in 1 2 3 4 5 6; do
+          id unreact-platform >/dev/null   || { echo "FAIL: service user 'unreact-platform' not created"; exit 1; }
+          test -f /opt/unreact-platform/server.cjs           || { echo "FAIL: server.cjs missing from /opt/unreact-platform/"; exit 1; }
+          test -d /opt/unreact-platform/dist                  || { echo "FAIL: dist/ missing from /opt/unreact-platform/"; exit 1; }
+          test -f /etc/unreact-platform/unreact-platform.env  || { echo "FAIL: env conffile missing from /etc/unreact-platform/"; exit 1; }
+          test -f /var/lib/unreact-platform/installed-tag     || { echo "FAIL: /var/lib/unreact-platform/installed-tag missing (postinstall didn't seed it)"; exit 1; }
+          echo "PASS: postinstall artifacts present (user + files + installed-tag)"
+
+      - name: Verify systemd: service+timer enabled, service active(running)
+        run: |
+          # postinstall.sh already ran `systemctl enable+restart unreact-platform`.
+          # The next ~15s must take it to active(running) — anything else (signal,
+          # failed, restart-loop) means a regression like the MemoryDenyWriteExecute
+          # SIGTRAP that hit v1.0.3.
+
+          systemctl is-enabled unreact-platform.service       | grep -qx enabled || { echo "FAIL: unreact-platform.service not enabled"; exit 1; }
+          systemctl is-enabled unreact-platform-update.timer  | grep -qx enabled || { echo "FAIL: unreact-platform-update.timer not enabled"; exit 1; }
+          echo "PASS: service + update timer both enabled"
+
+          dump_on_fail() {
+            echo "----- systemctl status -----"
+            sudo systemctl status unreact-platform --no-pager -l || true
+            echo "----- journalctl -----"
+            sudo journalctl -u unreact-platform --no-pager -n 80 || true
+          }
+
+          for i in $(seq 1 15); do
+            STATE=$(systemctl show -p ActiveState --value unreact-platform 2>/dev/null || echo unknown)
+            SUB=$(systemctl show -p SubState    --value unreact-platform 2>/dev/null || echo unknown)
+            if [ "$STATE" = "active" ] && [ "$SUB" = "running" ]; then
+              echo "PASS: unreact-platform reached active(running) after ${i}s"
+              break
+            fi
+            if [ "$STATE" = "failed" ]; then
+              echo "FAIL: unreact-platform entered failed state after ${i}s"
+              dump_on_fail
+              exit 1
+            fi
             sleep 1
-            curl -sf -o /dev/null http://localhost:19877/healthz && break
           done
 
-          fail() { echo "FAIL: $*"; exit 1; }
+          FINAL_STATE=$(systemctl show -p ActiveState --value unreact-platform)
+          FINAL_SUB=$(systemctl show -p SubState    --value unreact-platform)
+          if [ "$FINAL_STATE" != "active" ] || [ "$FINAL_SUB" != "running" ]; then
+            echo "FAIL: service is $FINAL_STATE/$FINAL_SUB after 15s"
+            dump_on_fail
+            exit 1
+          fi
 
-          HTTP=$(curl -s -o /tmp/home.html -w "%{http_code}" http://localhost:19877/)
+          # Crash-loop check: any restart within the first 15s is a strong signal
+          # something is killing the process (SIGTRAP / SIGKILL / etc.).
+          RESTARTS=$(systemctl show -p NRestarts --value unreact-platform)
+          if [ "${RESTARTS:-0}" -gt 0 ]; then
+            echo "FAIL: service restarted $RESTARTS time(s) — likely crashing on startup"
+            dump_on_fail
+            exit 1
+          fi
+
+      - name: Smoke-test HTTP endpoints via systemd (default port 28291)
+        run: |
+          fail() {
+            echo "FAIL: $*"
+            sudo systemctl status unreact-platform --no-pager -l || true
+            sudo journalctl -u unreact-platform --no-pager -n 50 || true
+            exit 1
+          }
+
+          # The systemd-managed server listens on the .deb's default port (28291,
+          # from /etc/unreact-platform/unreact-platform.env). Wait briefly in case
+          # /healthz isn't responsive the instant the unit goes active.
+          for i in $(seq 1 10); do
+            curl -sf -o /dev/null http://localhost:28291/healthz && break
+            sleep 1
+          done
+
+          HTTP=$(curl -s -o /tmp/home.html -w "%{http_code}" http://localhost:28291/)
           [ "$HTTP" = "200" ] || fail "/ returned $HTTP"
           grep -q "un-React" /tmp/home.html || fail "/ did not contain 'un-React'"
 
-          # SPA fallback — any unknown route should also return index.html
-          HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:19877/step/1)
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:28291/step/1)
           [ "$HTTP" = "200" ] || fail "/step/1 returned $HTTP (SPA fallback broken)"
 
-          # Health endpoint
-          HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:19877/healthz)
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:28291/healthz)
           [ "$HTTP" = "200" ] || fail "/healthz returned $HTTP"
 
-          echo "PASS: server up, all endpoints OK"
+          echo "PASS: systemd-managed server responding on :28291, all endpoints OK"
 
   # ---------------------------------------------------------------------------
   # Release: downloads the artifact built earlier (no rebuild) and lets
