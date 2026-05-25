@@ -119,7 +119,6 @@ export function SideNav({
     (n, s) => n + (passedStepIds.has(s.id) ? 1 : 0),
     0,
   );
-  const availableCount = implemented.size;
 
   return (
     <aside className="flex flex-col h-full p-unit bg-surface-container-low border-r border-outline-variant w-[280px] shrink-0 hidden lg:flex">
@@ -152,36 +151,18 @@ export function SideNav({
             {passedCount} / {TOTAL_STEPS}
           </span>
         </div>
-        {/*
-          Two-layer bar:
-            · Background — full track (gray).
-            · Middle layer — outline showing how many steps are even
-              implemented yet (so the learner sees the "available zone").
-            · Foreground amber — the actual completion (passedCount).
-          Makes "you've passed 0 of 8, 2 are available, 6 are planned"
-          legible at a glance without a wall of numbers.
-        */}
         <div
-          className="relative h-1 rounded-full bg-surface-container-high overflow-hidden"
+          className="h-1 rounded-full bg-surface-container-high overflow-hidden"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={TOTAL_STEPS}
           aria-valuenow={passedCount}
-          aria-label={`${passedCount} of ${TOTAL_STEPS} steps passed; ${availableCount} available`}
+          aria-label={`${passedCount} of ${TOTAL_STEPS} steps passed`}
         >
           <div
-            className="absolute inset-y-0 left-0 bg-surface-bright/60 transition-all duration-500 ease-out"
-            style={{ width: `${(availableCount / TOTAL_STEPS) * 100}%` }}
-            aria-hidden="true"
-          />
-          <div
-            className="absolute inset-y-0 left-0 bg-tertiary transition-all duration-500 ease-out"
+            className="h-full bg-tertiary transition-all duration-500 ease-out"
             style={{ width: `${(passedCount / TOTAL_STEPS) * 100}%` }}
-            aria-hidden="true"
           />
-        </div>
-        <div className="mt-1.5 font-label-sm text-label-sm text-on-surface-variant opacity-60">
-          {availableCount} available · {TOTAL_STEPS - availableCount} planned
         </div>
       </div>
 
