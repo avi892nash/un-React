@@ -4,18 +4,19 @@
 // without a file extension serves index.html so client-side routes work).
 // Zero npm dependencies; only Node built-ins. Runs under systemd in
 // production via packaging/systemd/unreact-platform.service.
+//
+// CommonJS on purpose: works on Node >= 10 without needing ESM. Filename
+// is `.cjs` so `"type": "module"` in package.json doesn't apply.
 
-import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { dirname, extname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+const { createServer } = require('http');
+const { readFile } = require('fs').promises;
+const { extname, join, resolve } = require('path');
 
-const PORT = Number(process.env.PORT ?? 28291);
-const HOSTNAME = process.env.HOSTNAME ?? '0.0.0.0';
+const PORT = Number(process.env.PORT || 28291);
+const HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 
 // In dev: __dirname is the repo root, ROOT is `./dist/`.
 // In production (.deb): __dirname is `/opt/unreact-platform/`, ROOT is `/opt/unreact-platform/dist/`.
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, 'dist');
 
 const MIME = {
@@ -49,7 +50,7 @@ const server = createServer(async (req, res) => {
 
   try {
     const pathname = decodeURIComponent(
-      new URL(req.url ?? '/', `http://${req.headers.host}`).pathname,
+      new URL(req.url || '/', `http://${req.headers.host}`).pathname,
     );
 
     // SPA fallback: paths without a file extension serve index.html
@@ -64,7 +65,7 @@ const server = createServer(async (req, res) => {
     }
 
     const body = await readFile(target);
-    const mime = MIME[extname(target).toLowerCase()] ?? 'application/octet-stream';
+    const mime = MIME[extname(target).toLowerCase()] || 'application/octet-stream';
     res.writeHead(200, {
       'Content-Type': mime,
       // index.html must never be cached so deploys take effect immediately.
@@ -76,7 +77,7 @@ const server = createServer(async (req, res) => {
     });
     res.end(body);
   } catch (err) {
-    if ((err)?.code === 'ENOENT') {
+    if (err && err.code === 'ENOENT') {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not found\n');
       return;

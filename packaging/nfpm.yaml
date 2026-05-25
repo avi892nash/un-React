@@ -21,7 +21,7 @@ homepage: https://github.com/avi892nash/un-React
 license: MIT
 
 depends:
-  - nodejs (>= 18)
+  - nodejs (>= 14)
 
 contents:
   # Static SPA bundle produced by `vite build`
@@ -29,9 +29,9 @@ contents:
     dst: /opt/unreact-platform/dist
     type: tree
 
-  # The Node static server (40 lines, no deps)
-  - src: server.mjs
-    dst: /opt/unreact-platform/server.mjs
+  # The Node static server (CommonJS, no deps — works on Node >= 14)
+  - src: server.cjs
+    dst: /opt/unreact-platform/server.cjs
 
   # Systemd unit + auto-update timer
   - src: packaging/systemd/unreact-platform.service
