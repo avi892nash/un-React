@@ -6,7 +6,7 @@ An interactive, step-by-step curriculum that teaches developers how to build a R
 
 Runs as a long-lived static-server service on any Debian-based Linux, including Raspberry Pi (the `.deb` is `arch: all` — pure Node, no native binaries, so the same package works on amd64 / arm64 / armhf). Auto-upgrades are built in via a systemd timer that polls `/releases/latest` on GitHub — once installed, you don't have to touch it again to stay current.
 
-> **Requires:** Debian 11+, Ubuntu 20.04+, or Raspberry Pi OS Bullseye/Bookworm, plus Node.js 18+. The package declares `Depends: nodejs (>= 18)`. If your distro's default Node is older, install a current version first via [NodeSource](https://github.com/nodesource/distributions):
+> **Requires:** Debian 11+, Ubuntu 20.04+, or Raspberry Pi OS Bullseye/Bookworm, plus Node.js 14+. The package declares `Depends: nodejs (>= 14)`. If your distro's default Node is older, install a current version first via [NodeSource](https://github.com/nodesource/distributions):
 >
 > ```bash
 > curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -20,7 +20,7 @@ curl -fsSL https://github.com/avi892nash/un-React/releases/latest/download/unrea
   && sudo apt install -y /tmp/unreact-platform.deb
 ```
 
-That's it — the service is up at <http://localhost:28291>. From now on, the bundled `unreact-platform-update.timer` polls `/releases/latest` every 30 min (with up to 10 min of jitter) and applies new versions automatically.
+That's it — the service is up at <http://localhost:28291>. From now on, the bundled `unreact-platform-update.timer` polls `/releases/latest` every 5 min (with up to 1 min of jitter) and applies new versions automatically.
 
 #### Raspberry Pi specifics
 
@@ -35,8 +35,8 @@ The install enables two systemd units:
 
 | Unit | What it does |
 | --- | --- |
-| `unreact-platform.service` | Runs `node /opt/unreact-platform/server.cjs` (hardened: dedicated `unreact-platform` user, `PrivateTmp`, `ProtectSystem=strict`, `MemoryDenyWriteExecute`, …) |
-| `unreact-platform-update.timer` | Every 30 min: `/usr/bin/unreact-platform-update` polls the GitHub Releases API, compares `tag_name` against `/var/lib/unreact-platform/installed-tag`, and `apt install`s the new `.deb` if they differ |
+| `unreact-platform.service` | Runs `node /opt/unreact-platform/server.cjs` (hardened: dedicated `unreact-platform` user, `PrivateTmp`, `ProtectSystem=strict`, `LockPersonality`, …) |
+| `unreact-platform-update.timer` | Every 5 min: `/usr/bin/unreact-platform-update` polls the GitHub Releases API, compares `tag_name` against `/var/lib/unreact-platform/installed-tag`, and `apt install`s the new `.deb` if they differ |
 
 ### Common operations
 
@@ -84,7 +84,7 @@ Other scripts:
 
 ```bash
 npm run build        # produce dist/
-npm run start        # run server.mjs against the built dist/ (port 28291)
+npm run start        # run server.cjs against the built dist/ (port 28291)
 npm test             # 22 tests: diff, transform, curriculum guardrail
 npm run typecheck    # tsc --noEmit
 npm run package:deb  # build a .deb locally (requires nfpm — see below)
@@ -148,7 +148,7 @@ npm run release:dry    # prints what semantic-release would do, without doing it
 /lib/systemd/system/
   ├─ unreact-platform.service          # main service unit (hardened)
   ├─ unreact-platform-update.service   # oneshot updater
-  └─ unreact-platform-update.timer     # 30-min poll, 10-min jitter
+  └─ unreact-platform-update.timer     # 5-min poll, 1-min jitter
 
 /usr/bin/unreact-platform-update       # the GitHub Releases poller
 /etc/unreact-platform/unreact-platform.env   # user-editable conffile
