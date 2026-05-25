@@ -35,7 +35,7 @@ The install enables two systemd units:
 
 | Unit | What it does |
 | --- | --- |
-| `unreact-platform.service` | Runs `node /opt/unreact-platform/server.mjs` (hardened: dedicated `unreact-platform` user, `PrivateTmp`, `ProtectSystem=strict`, `MemoryDenyWriteExecute`, …) |
+| `unreact-platform.service` | Runs `node /opt/unreact-platform/server.cjs` (hardened: dedicated `unreact-platform` user, `PrivateTmp`, `ProtectSystem=strict`, `MemoryDenyWriteExecute`, …) |
 | `unreact-platform-update.timer` | Every 30 min: `/usr/bin/unreact-platform-update` polls the GitHub Releases API, compares `tag_name` against `/var/lib/unreact-platform/installed-tag`, and `apt install`s the new `.deb` if they differ |
 
 ### Common operations
@@ -142,7 +142,7 @@ npm run release:dry    # prints what semantic-release would do, without doing it
 ```
 /opt/unreact-platform/
   ├─ dist/              # static Vite SPA bundle (HTML + assets)
-  └─ server.mjs         # ~80-line Node static server with SPA fallback,
+  └─ server.cjs         # ~80-line Node static server with SPA fallback,
                         # MIME map, and /healthz
 
 /lib/systemd/system/
