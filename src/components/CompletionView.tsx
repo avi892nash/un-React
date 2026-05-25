@@ -50,7 +50,7 @@ export function CompletionView({ steps, platformState, onStateChange, onBack }: 
 
   return (
     <div className="h-full overflow-y-auto bg-surface">
-      <div className="max-w-3xl mx-auto px-margin-desktop py-12 space-y-10">
+      <div className="max-w-3xl mx-auto px-margin-desktop py-12 space-y-10 animate-rise-in">
         <header className="space-y-2 text-center">
           <span className="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase font-bold">
             Course complete
@@ -112,7 +112,7 @@ export function CompletionView({ steps, platformState, onStateChange, onBack }: 
           <button
             type="button"
             onClick={onDownloadCertificate}
-            className="bg-tertiary text-on-tertiary px-6 py-5 rounded-xl font-bold flex flex-col items-start gap-1 hover:opacity-90 cursor-pointer"
+            className="bg-tertiary text-on-tertiary px-6 py-5 rounded-xl font-bold flex flex-col items-start gap-1 hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <span className="material-symbols-outlined">workspace_premium</span>
@@ -125,7 +125,7 @@ export function CompletionView({ steps, platformState, onStateChange, onBack }: 
           <button
             type="button"
             onClick={onDownloadCode}
-            className="bg-surface-container border border-outline-variant text-on-surface px-6 py-5 rounded-xl font-bold flex flex-col items-start gap-1 hover:bg-surface-container-high cursor-pointer"
+            className="bg-surface-container border border-outline-variant text-on-surface px-6 py-5 rounded-xl font-bold flex flex-col items-start gap-1 hover:bg-surface-container-high hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <span className="material-symbols-outlined">download</span>

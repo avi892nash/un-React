@@ -129,7 +129,7 @@ export function SideNav({
           aria-label={`${availableCount} of ${TOTAL_STEPS} steps available`}
         >
           <div
-            className="h-full bg-tertiary"
+            className="h-full bg-tertiary transition-all duration-500 ease-out"
             style={{ width: `${(availableCount / TOTAL_STEPS) * 100}%` }}
           />
         </div>
@@ -165,7 +165,7 @@ export function SideNav({
         ))}
 
         {allPassed && (
-          <section className="mt-4">
+          <section className="mt-4 animate-slide-in-x">
             <h3 className="px-4 mt-3 mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant opacity-70">
               Completion
             </h3>
@@ -174,7 +174,7 @@ export function SideNav({
                 <button
                   type="button"
                   onClick={onSelectCompletion}
-                  className={`w-full mx-2 px-3 py-2 flex items-center gap-3 rounded-lg text-left cursor-pointer ${
+                  className={`w-full mx-2 px-3 py-2 flex items-center gap-3 rounded-lg text-left cursor-pointer transition-colors ${
                     activeView === 'completion'
                       ? 'bg-primary-container text-on-primary-container'
                       : 'text-on-surface hover:bg-surface-container-highest'
@@ -216,10 +216,10 @@ function StepRow({
   const isPlanned  = state === 'planned';
 
   const rowClass = isCurrent
-    ? 'bg-primary-container text-on-primary-container rounded-lg'
+    ? 'bg-primary-container text-on-primary-container rounded-lg transition-colors'
     : isPlanned
       ? 'text-on-surface-variant opacity-50'
-      : 'text-on-surface hover:bg-surface-container-highest rounded-lg cursor-pointer';
+      : 'text-on-surface hover:bg-surface-container-highest rounded-lg cursor-pointer transition-colors';
 
   const content = (
     <>
@@ -256,7 +256,7 @@ function Bullet({ state }: { state: StepState }) {
   if (state === 'current') {
     return (
       <span
-        className="w-2.5 h-2.5 rounded-full bg-tertiary shrink-0"
+        className="w-2.5 h-2.5 rounded-full bg-tertiary shrink-0 animate-bullet-pulse"
         aria-label="current step"
       />
     );
@@ -264,7 +264,7 @@ function Bullet({ state }: { state: StepState }) {
   if (state === 'available') {
     return (
       <span
-        className="w-2.5 h-2.5 rounded-full border border-on-surface-variant shrink-0"
+        className="w-2.5 h-2.5 rounded-full border border-on-surface-variant shrink-0 transition-colors"
         aria-label="available step"
       />
     );

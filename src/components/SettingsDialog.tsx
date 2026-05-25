@@ -32,11 +32,11 @@ export function SettingsDialog({ platformState, onStateChange, onClose }: Props)
       role="dialog"
       aria-modal="true"
       aria-label="Settings"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-rise-in"
       onClick={onClose}
     >
       <div
-        className="bg-surface-container rounded-xl border border-outline-variant p-6 w-[480px] max-w-[92vw] space-y-5"
+        className="bg-surface-container rounded-xl border border-outline-variant p-6 w-[480px] max-w-[92vw] space-y-5 animate-pop-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">

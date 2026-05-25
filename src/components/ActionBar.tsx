@@ -31,7 +31,7 @@ export function ActionBar({ running, onRun, onReset, onHint }: Props) {
         className="bg-primary text-on-primary px-5 py-1.5 rounded flex items-center gap-2 font-label-sm text-label-sm uppercase tracking-widest font-bold active:translate-y-0.5 transition-transform shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span
-          className="material-symbols-outlined"
+          className={`material-symbols-outlined ${running ? 'animate-spin' : ''}`}
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
           {running ? 'hourglass_empty' : 'play_arrow'}
