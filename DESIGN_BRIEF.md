@@ -147,8 +147,6 @@ For each deliverable, include:
 
 ## 8. Reference inputs (read these before designing)
 
-- Repo root: `/Users/avinashverma/Github/un-React/.claude/worktrees/peaceful-bose-1f865f`
-- The framework being taught: [`index.js`](../index.js) (~310 LOC)
-- The existing platform code (the thing you're redesigning): [`platform/src/`](./src/)
-- The shipped MVP at runtime: `cd platform && npm install && npm run dev`
+- The existing platform code (the thing you're redesigning): [`src/`](./src/)
+- The shipped MVP at runtime: `npm install && npm run dev`
 - Project plan with full architectural rationale: see the plan file
