@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/avi892nash/un-React/compare/v1.0.1...v1.0.2) (2026-05-25)
+
+### Refactor
+
+* flatten platform/ subdirectory into repo root ([#4](https://github.com/avi892nash/un-React/issues/4)) ([ab06d42](https://github.com/avi892nash/un-React/commit/ab06d4292d93cd0d61af97c33051c5bcc6f42c03))
+
 ## [1.0.1](https://github.com/avi892nash/un-React/compare/v1.0.0...v1.0.1) (2026-05-25)
 
 ### Bug Fixes
