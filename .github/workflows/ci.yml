@@ -156,7 +156,7 @@ jobs:
           test -f /var/lib/unreact-platform/installed-tag     || { echo "FAIL: /var/lib/unreact-platform/installed-tag missing (postinstall didn't seed it)"; exit 1; }
           echo "PASS: postinstall artifacts present (user + files + installed-tag)"
 
-      - name: Verify systemd: service+timer enabled, service active(running)
+      - name: "Verify systemd: service+timer enabled, service active(running)"
         run: |
           # postinstall.sh already ran `systemctl enable+restart unreact-platform`.
           # The next ~15s must take it to active(running) — anything else (signal,
