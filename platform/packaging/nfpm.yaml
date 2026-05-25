@@ -1,0 +1,68 @@
+# nfpm config for building the unreact-platform .deb.
+# Run via packaging/scripts/build-deb.sh which substitutes ${VERSION}.
+# Docs: https://nfpm.goreleaser.com/configuration/
+
+name: unreact-platform
+# Architecture: all — the .deb contains only Node.js code (a static Vite
+# build + a small Node static server); no compiled native binaries.
+arch: all
+platform: linux
+version: ${VERSION}
+version_schema: semver
+section: web
+priority: optional
+maintainer: avi892nash <noreply@github.com>
+description: |
+  un-React tutorial platform — an interactive, step-by-step curriculum
+  that teaches developers to reconstruct a React-like framework from
+  scratch. Ships as a self-hosted Node service with a static SPA bundle.
+vendor: avi892nash
+homepage: https://github.com/avi892nash/un-React
+license: MIT
+
+depends:
+  - nodejs (>= 18)
+
+contents:
+  # Static SPA bundle produced by `vite build`
+  - src: dist
+    dst: /opt/unreact-platform/dist
+    type: tree
+
+  # The Node static server (40 lines, no deps)
+  - src: server.mjs
+    dst: /opt/unreact-platform/server.mjs
+
+  # Systemd unit + auto-update timer
+  - src: packaging/systemd/unreact-platform.service
+    dst: /lib/systemd/system/unreact-platform.service
+  - src: packaging/systemd/unreact-platform-update.service
+    dst: /lib/systemd/system/unreact-platform-update.service
+  - src: packaging/systemd/unreact-platform-update.timer
+    dst: /lib/systemd/system/unreact-platform-update.timer
+
+  # Auto-updater — polls GitHub Releases API and installs newer .debs
+  - src: packaging/scripts/unreact-platform-update
+    dst: /usr/bin/unreact-platform-update
+    file_info:
+      mode: 0755
+
+  # User-editable env file (PORT, HOSTNAME, NODE_ENV)
+  - src: packaging/etc/unreact-platform.env
+    dst: /etc/unreact-platform/unreact-platform.env
+    type: config|noreplace
+
+  # Bundled changelog so `dpkg --changelog unreact-platform` works
+  - src: CHANGELOG.md
+    dst: /usr/share/doc/unreact-platform/CHANGELOG.md
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: packaging/scripts/postinstall.sh
+  preremove: packaging/scripts/preremove.sh
+  postremove: packaging/scripts/postremove.sh
+
+deb:
+  fields:
+    Bugs: https://github.com/avi892nash/un-React/issues

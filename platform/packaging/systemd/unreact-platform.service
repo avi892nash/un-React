@@ -1,0 +1,36 @@
+[Unit]
+Description=unreact-platform — Tutorial platform static server
+Documentation=https://github.com/avi892nash/un-React
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=unreact-platform
+Group=unreact-platform
+WorkingDirectory=/opt/unreact-platform
+EnvironmentFile=/etc/unreact-platform/unreact-platform.env
+ExecStart=/usr/bin/node /opt/unreact-platform/server.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+KillMode=mixed
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/unreact-platform
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
