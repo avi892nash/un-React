@@ -16,7 +16,11 @@ RestartSec=5
 TimeoutStopSec=20
 KillMode=mixed
 
-# Hardening
+# Hardening.
+# NOTE: MemoryDenyWriteExecute is intentionally NOT enabled — it crashes
+# Node with SIGTRAP because V8's JIT must allocate writable+executable
+# memory pages for compiled JavaScript. Every other directive here is
+# compatible with Node and worth keeping.
 NoNewPrivileges=true
 PrivateTmp=true
 PrivateDevices=true
@@ -29,7 +33,6 @@ ProtectControlGroups=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 RestrictNamespaces=true
 LockPersonality=true
-MemoryDenyWriteExecute=true
 SystemCallArchitectures=native
 
 [Install]
