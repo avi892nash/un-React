@@ -58,6 +58,12 @@ const CURRICULUM: Stage[] = [
 interface Props {
   steps: Step[];
   currentStepId: string;
+  /** True once every implemented step has been passed at least once. */
+  allPassed: boolean;
+  /** Which top-level view is active — curriculum or completion. */
+  activeView: 'curriculum' | 'completion';
+  onSelectCompletion: () => void;
+  onSelectCurriculum: () => void;
 }
 
 type StepState = 'current' | 'available' | 'planned';
@@ -70,13 +76,24 @@ function stateFor(stepId: string, implemented: Set<string>, currentStepId: strin
 
 const TOTAL_STEPS = CURRICULUM.reduce((n, s) => n + s.steps.length, 0);
 
-export function SideNav({ steps, currentStepId }: Props) {
+export function SideNav({
+  steps,
+  currentStepId,
+  allPassed,
+  activeView,
+  onSelectCompletion,
+  onSelectCurriculum,
+}: Props) {
   const implemented = new Set(steps.map((s) => s.id));
   const availableCount = implemented.size;
 
   return (
     <aside className="flex flex-col h-full p-unit bg-surface-container-low border-r border-outline-variant w-[280px] shrink-0 hidden lg:flex">
-      <div className="px-4 py-4 flex items-center gap-3">
+      <button
+        type="button"
+        onClick={onSelectCurriculum}
+        className="px-4 py-4 flex items-center gap-3 text-left cursor-pointer hover:bg-surface-container-highest"
+      >
         <img
           src="/logo-icon.png"
           alt="un-React"
@@ -90,7 +107,7 @@ export function SideNav({ steps, currentStepId }: Props) {
             v0.4.2-beta
           </div>
         </div>
-      </div>
+      </button>
 
       <div className="px-4 py-3 border-y border-outline-variant">
         <div className="flex items-baseline justify-between mb-1.5">
@@ -123,13 +140,40 @@ export function SideNav({ steps, currentStepId }: Props) {
               {stage.label}
             </h3>
             <ul className="flex flex-col">
-              {stage.steps.map((step) => {
-                const state = stateFor(step.id, implemented, currentStepId);
-                return <StepRow key={step.id} label={step.label} state={state} />;
+              {stage.steps.map((s) => {
+                const state = activeView === 'completion'
+                  ? // When the completion page is active, don't highlight any step as "current"
+                    (implemented.has(s.id) ? 'available' : 'planned')
+                  : stateFor(s.id, implemented, currentStepId);
+                return <StepRow key={s.id} label={s.label} state={state} />;
               })}
             </ul>
           </section>
         ))}
+
+        {allPassed && (
+          <section className="mt-4">
+            <h3 className="px-4 mt-3 mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant opacity-70">
+              Completion
+            </h3>
+            <ul className="flex flex-col">
+              <li>
+                <button
+                  type="button"
+                  onClick={onSelectCompletion}
+                  className={`w-full mx-2 px-3 py-2 flex items-center gap-3 rounded-lg text-left cursor-pointer ${
+                    activeView === 'completion'
+                      ? 'bg-primary-container text-on-primary-container'
+                      : 'text-on-surface hover:bg-surface-container-highest'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-tertiary text-sm">workspace_premium</span>
+                  <span className="font-body-md text-body-md truncate">Certificate</span>
+                </button>
+              </li>
+            </ul>
+          </section>
+        )}
       </nav>
 
       <div className="p-4 flex items-center gap-3 border-t border-outline-variant">
@@ -149,7 +193,6 @@ function StepRow({ label, state }: { label: string; state: StepState }) {
   const isCurrent  = state === 'current';
   const isPlanned  = state === 'planned';
 
-  // Color + bullet treatment per state.
   const rowClass = isCurrent
     ? 'bg-primary-container text-on-primary-container rounded-lg'
     : isPlanned
@@ -181,7 +224,6 @@ function Bullet({ state }: { state: StepState }) {
       />
     );
   }
-  // planned
   return (
     <span
       className="w-2.5 h-2.5 rounded-full border border-dashed border-on-surface-variant shrink-0"
