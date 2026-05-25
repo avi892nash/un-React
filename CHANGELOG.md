@@ -1,3 +1,9 @@
+## [1.0.4](https://github.com/avi892nash/un-React/compare/v1.0.3...v1.0.4) (2026-05-25)
+
+### Bug Fixes
+
+* drop MemoryDenyWriteExecute (SIGTRAP) and poll every 5 min ([#6](https://github.com/avi892nash/un-React/issues/6)) ([d128526](https://github.com/avi892nash/un-React/commit/d128526bc980ce21e3ebb3a8aa44fe7d4058903a)), closes [#5](https://github.com/avi892nash/un-React/issues/5)
+
 ## [1.0.3](https://github.com/avi892nash/un-React/compare/v1.0.2...v1.0.3) (2026-05-25)
 
 ### Bug Fixes
