@@ -1,3 +1,9 @@
+## [1.0.3](https://github.com/avi892nash/un-React/compare/v1.0.2...v1.0.3) (2026-05-25)
+
+### Bug Fixes
+
+* ship server as CommonJS (server.cjs) instead of ESM ([#5](https://github.com/avi892nash/un-React/issues/5)) ([ed38d16](https://github.com/avi892nash/un-React/commit/ed38d16b72cdfa0d8f0a1eca8fe187f17f9e9238))
+
 ## [1.0.2](https://github.com/avi892nash/un-React/compare/v1.0.1...v1.0.2) (2026-05-25)
 
 ### Refactor
