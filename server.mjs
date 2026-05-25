@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 const PORT = Number(process.env.PORT ?? 28291);
 const HOSTNAME = process.env.HOSTNAME ?? '0.0.0.0';
 
-// In dev: __dirname is `platform/`, ROOT is `platform/dist/`.
+// In dev: __dirname is the repo root, ROOT is `./dist/`.
 // In production (.deb): __dirname is `/opt/unreact-platform/`, ROOT is `/opt/unreact-platform/dist/`.
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, 'dist');
