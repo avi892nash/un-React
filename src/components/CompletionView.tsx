@@ -32,10 +32,14 @@ export function CompletionView({ steps, platformState, onStateChange, onBack }: 
   );
 
   const onDownloadCertificate = useCallback(() => {
+    // jspdf is dynamically imported; surface any chunk-load error in the
+    // console rather than letting it silently fail.
     downloadCertificate({
       candidateName: platformState.candidateName,
       score,
       versionTag: VERSION_TAG,
+    }).catch((err: unknown) => {
+      console.error('[un-react] certificate generation failed:', err);
     });
   }, [platformState.candidateName, score]);
 

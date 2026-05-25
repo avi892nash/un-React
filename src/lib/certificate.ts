@@ -5,7 +5,10 @@
 // + date + a serial. For a verifiable credential you'd need signing + a
 // hosted /verify endpoint; that's deliberately out of scope here.
 
-import { jsPDF } from 'jspdf';
+// NOTE: jspdf is only imported for its types up top — the value is loaded
+// dynamically inside `downloadCertificate` so the ~400KB PDF library
+// doesn't ship in the main bundle. The completion page is the only thing
+// that needs it, and it's behind allPassed.
 import type { ScoreBreakdown } from './scoring';
 
 export interface CertificateInput {
@@ -16,9 +19,13 @@ export interface CertificateInput {
 }
 
 /** Trigger a download of the certificate PDF. Returns the filename used. */
-export function downloadCertificate(input: CertificateInput): string {
+export async function downloadCertificate(input: CertificateInput): Promise<string> {
   const { candidateName, score, versionTag } = input;
   const name = candidateName.trim() || 'Developer';
+
+  // Dynamic import — keeps jspdf out of the initial bundle. Vite splits
+  // it into its own chunk that's only fetched when this fn first runs.
+  const { jsPDF } = await import('jspdf');
 
   // Landscape A4 in mm. 297 × 210.
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });

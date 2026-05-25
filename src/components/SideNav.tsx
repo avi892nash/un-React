@@ -26,8 +26,8 @@ const CURRICULUM: Stage[] = [
     id: 'rendering',
     label: 'Rendering',
     steps: [
-      { id: '02-create-dom',     label: 'createDom + updateDom' },
-      { id: '03-render',         label: 'render' },
+      { id: '02-render',         label: 'render' },
+      { id: '03-create-dom',     label: 'createDom + updateDom' },
     ],
   },
   {
@@ -62,6 +62,7 @@ interface Props {
   allPassed: boolean;
   /** Which top-level view is active — curriculum or completion. */
   activeView: 'curriculum' | 'completion';
+  onSelectStep: (stepId: string) => void;
   onSelectCompletion: () => void;
   onSelectCurriculum: () => void;
 }
@@ -81,6 +82,7 @@ export function SideNav({
   currentStepId,
   allPassed,
   activeView,
+  onSelectStep,
   onSelectCompletion,
   onSelectCurriculum,
 }: Props) {
@@ -145,7 +147,18 @@ export function SideNav({
                   ? // When the completion page is active, don't highlight any step as "current"
                     (implemented.has(s.id) ? 'available' : 'planned')
                   : stateFor(s.id, implemented, currentStepId);
-                return <StepRow key={s.id} label={s.label} state={state} />;
+                return (
+                  <StepRow
+                    key={s.id}
+                    label={s.label}
+                    state={state}
+                    onSelect={
+                      implemented.has(s.id)
+                        ? () => onSelectStep(s.id)
+                        : undefined
+                    }
+                  />
+                );
               })}
             </ul>
           </section>
@@ -189,7 +202,16 @@ export function SideNav({
   );
 }
 
-function StepRow({ label, state }: { label: string; state: StepState }) {
+function StepRow({
+  label,
+  state,
+  onSelect,
+}: {
+  label: string;
+  state: StepState;
+  /** Provided only for implemented steps (current + available). */
+  onSelect?: () => void;
+}) {
   const isCurrent  = state === 'current';
   const isPlanned  = state === 'planned';
 
@@ -197,12 +219,35 @@ function StepRow({ label, state }: { label: string; state: StepState }) {
     ? 'bg-primary-container text-on-primary-container rounded-lg'
     : isPlanned
       ? 'text-on-surface-variant opacity-50'
-      : 'text-on-surface hover:bg-surface-container-highest rounded-lg';
+      : 'text-on-surface hover:bg-surface-container-highest rounded-lg cursor-pointer';
 
-  return (
-    <li className={`mx-2 px-3 py-2 flex items-center gap-3 ${rowClass}`}>
+  const content = (
+    <>
       <Bullet state={state} />
       <span className="font-body-md text-body-md truncate">{label}</span>
+    </>
+  );
+
+  // Planned (locked) steps render as a non-interactive li; implemented ones
+  // render as a button so the keyboard + screen reader treat them as
+  // actionable.
+  if (!onSelect) {
+    return (
+      <li className={`mx-2 px-3 py-2 flex items-center gap-3 ${rowClass}`}>
+        {content}
+      </li>
+    );
+  }
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-current={isCurrent ? 'page' : undefined}
+        className={`w-full text-left mx-2 px-3 py-2 flex items-center gap-3 ${rowClass}`}
+      >
+        {content}
+      </button>
     </li>
   );
 }

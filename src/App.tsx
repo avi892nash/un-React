@@ -24,7 +24,7 @@ export default function App() {
 
   const [view, setView] = useState<View>('curriculum');
   const [showSettings, setShowSettings] = useState(false);
-  const [stepIndex] = useState(0); // multi-step nav comes when curriculum has > 1 step
+  const [stepIndex, setStepIndex] = useState(0);
   const apiRef = useRef<StepViewApi | null>(null);
 
   const step = steps[stepIndex];
@@ -76,6 +76,13 @@ export default function App() {
           currentStepId={step.id}
           allPassed={allPassed}
           activeView={view}
+          onSelectStep={(id) => {
+            const idx = steps.findIndex((s) => s.id === id);
+            if (idx >= 0) {
+              setStepIndex(idx);
+              setView('curriculum');
+            }
+          }}
           onSelectCompletion={() => setView('completion')}
           onSelectCurriculum={() => setView('curriculum')}
         />
