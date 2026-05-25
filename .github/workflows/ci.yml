@@ -150,7 +150,7 @@ jobs:
       - name: Start server + smoke-test endpoints
         run: |
           NODE_ENV=production HOSTNAME=0.0.0.0 PORT=19877 \
-            node /opt/unreact-platform/server.mjs &
+            node /opt/unreact-platform/server.cjs &
           PID=$!
           trap 'kill $PID 2>/dev/null || true' EXIT
           for i in 1 2 3 4 5 6; do
