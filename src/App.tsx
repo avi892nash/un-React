@@ -47,7 +47,7 @@ export default function App() {
         onSettings={onSettings}
       />
       <div className="flex flex-1 overflow-hidden">
-        <SideNav />
+        <SideNav steps={steps} currentStepId={step.id} />
         <main className="flex-1 flex overflow-hidden min-w-0">
           <StepView
             step={step}
