@@ -164,29 +164,51 @@ export function SideNav({
           </section>
         ))}
 
-        {allPassed && (
-          <section className="mt-4 animate-slide-in-x">
-            <h3 className="px-4 mt-3 mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant opacity-70">
-              Completion
-            </h3>
-            <ul className="flex flex-col">
-              <li>
-                <button
-                  type="button"
-                  onClick={onSelectCompletion}
-                  className={`w-full mx-2 px-3 py-2 flex items-center gap-3 rounded-lg text-left cursor-pointer transition-colors ${
-                    activeView === 'completion'
-                      ? 'bg-primary-container text-on-primary-container'
-                      : 'text-on-surface hover:bg-surface-container-highest'
+        {/*
+          The finish line is always visible, even when locked, so the user
+          can see what they're working toward. Once allPassed flips true
+          the row animates in to its enabled style (slide + color shift).
+        */}
+        <section className="mt-4">
+          <h3 className="px-4 mt-3 mb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant opacity-70">
+            Completion
+          </h3>
+          <ul className="flex flex-col">
+            <li>
+              <button
+                type="button"
+                onClick={allPassed ? onSelectCompletion : undefined}
+                disabled={!allPassed}
+                aria-disabled={!allPassed}
+                aria-current={activeView === 'completion' ? 'page' : undefined}
+                title={
+                  allPassed
+                    ? 'Open completion page'
+                    : `Finish all ${steps.length === 1 ? 'the' : steps.length + ' implemented'} steps to unlock`
+                }
+                className={`w-full mx-2 px-3 py-2 flex items-center gap-3 rounded-lg text-left transition-all ${
+                  !allPassed
+                    ? 'text-on-surface-variant opacity-50 cursor-not-allowed'
+                    : activeView === 'completion'
+                      ? 'bg-primary-container text-on-primary-container cursor-pointer'
+                      : 'text-on-surface hover:bg-surface-container-highest cursor-pointer animate-slide-in-x'
+                }`}
+              >
+                <span
+                  className={`material-symbols-outlined text-sm ${
+                    allPassed ? 'text-tertiary' : 'text-on-surface-variant'
                   }`}
+                  style={allPassed ? { fontVariationSettings: "'FILL' 1" } : undefined}
                 >
-                  <span className="material-symbols-outlined text-tertiary text-sm">workspace_premium</span>
-                  <span className="font-body-md text-body-md truncate">Certificate</span>
-                </button>
-              </li>
-            </ul>
-          </section>
-        )}
+                  {allPassed ? 'workspace_premium' : 'lock'}
+                </span>
+                <span className="font-body-md text-body-md truncate">
+                  {allPassed ? 'Certificate' : 'Certificate (locked)'}
+                </span>
+              </button>
+            </li>
+          </ul>
+        </section>
       </nav>
 
       <div className="p-4 flex items-center gap-3 border-t border-outline-variant">
