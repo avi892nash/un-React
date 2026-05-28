@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/avi892nash/un-React/compare/v1.1.0...v1.1.1) (2026-05-28)
+
+### Bug Fixes
+
+* **deb:** updater uses GitHub web redirect instead of REST API ([#8](https://github.com/avi892nash/un-React/issues/8)) ([2f279f3](https://github.com/avi892nash/un-React/commit/2f279f30145b8b1a82d88df47ee917f50e8284c6))
+
 ## [1.1.0](https://github.com/avi892nash/un-React/compare/v1.0.4...v1.1.0) (2026-05-28)
 
 ### Features
