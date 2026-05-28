@@ -25,6 +25,10 @@ export default function App() {
   const [view, setView] = useState<View>('curriculum');
   const [showSettings, setShowSettings] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  // Drawer state for the SideNav at <lg. At lg+ the sidebar is always
+  // rendered (CSS), so this flag is ignored visually — it tracks only
+  // the small-screen drawer.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const apiRef = useRef<StepViewApi | null>(null);
 
   const step = steps[stepIndex];
@@ -72,6 +76,7 @@ export default function App() {
         total={steps.length}
         onHelp={onHelp}
         onSettings={() => setShowSettings(true)}
+        onToggleSidebar={() => setSidebarOpen((v) => !v)}
       />
       <div className="flex flex-1 overflow-hidden">
         <SideNav
@@ -80,6 +85,8 @@ export default function App() {
           passedStepIds={passedStepIds}
           allPassed={allPassed}
           activeView={view}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
           onSelectStep={(id) => {
             const idx = steps.findIndex((s) => s.id === id);
             if (idx >= 0) {

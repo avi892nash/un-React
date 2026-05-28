@@ -84,6 +84,11 @@ export function StepView({ step, platformState, onStateChange, exposeApi }: Prop
   const [vdomTree, setVdomTree] = useState<unknown>(null);
   const [runState, dispatch] = useReducer(runStateReducer, { kind: 'idle' });
   const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>(INITIAL_CONSOLE);
+  // Tab state for the <md layout. At md+ both sections are visible
+  // side-by-side and this is ignored. Default 'lesson' so the learner
+  // lands on the explanation / editor first; the platform auto-switches
+  // them to 'output' on every Run so they see the result. (See runCode.)
+  const [mobileTab, setMobileTab] = useState<'lesson' | 'output'>('lesson');
 
   const leftPaneRef = useRef<HTMLElement | null>(null);
   const editorWrapRef = useRef<HTMLDivElement | null>(null);
@@ -161,6 +166,10 @@ export function StepView({ step, platformState, onStateChange, exposeApi }: Prop
   const runCode = useCallback(async () => {
     if (runningRef.current) return;
     runningRef.current = true;
+
+    // Auto-flip to the Output tab on mobile so the result is immediately
+    // visible without making the user manually switch. No-op at md+.
+    setMobileTab('output');
 
     dispatch({ type: 'compiling' });
     setConsoleLines([
@@ -326,18 +335,45 @@ export function StepView({ step, platformState, onStateChange, exposeApi }: Prop
 
   return (
     <div className="h-full flex flex-col bg-surface">
+      {/* TAB BAR — visible only at <md. Two tabs: Lesson (explanation +
+          editor) and Output (challenge + preview + console). At md+ both
+          panes are visible side-by-side so this UI is hidden. */}
+      <div className="md:hidden flex border-b border-outline-variant bg-surface-container" role="tablist" aria-label="Step view">
+        <TabButton
+          active={mobileTab === 'lesson'}
+          onClick={() => setMobileTab('lesson')}
+          icon="menu_book"
+          label="Lesson"
+        />
+        <TabButton
+          active={mobileTab === 'output'}
+          onClick={() => setMobileTab('output')}
+          icon="play_circle"
+          label="Output"
+          badge={runState.kind === 'done' && runState.result.pass ? 'pass' : runState.kind === 'done' ? 'fail' : null}
+        />
+      </div>
+
       <div className="flex-1 flex overflow-hidden">
-        {/* LEFT 60%: concept + editor + action bar */}
-        <section className="w-3/5 h-full flex flex-col border-r border-outline-variant bg-surface min-w-0">
+        {/* LEFT 60%: concept + editor.
+            md+: visible as a 60% column.
+            <md: visible only when the Lesson tab is active. */}
+        <section
+          className={`
+            w-full md:w-3/5 h-full flex-col bg-surface min-w-0
+            md:flex md:border-r md:border-outline-variant
+            ${mobileTab === 'lesson' ? 'flex' : 'hidden md:flex'}
+          `}
+        >
           <div
             ref={(el) => { leftPaneRef.current = el; }}
-            className="flex-1 overflow-y-auto px-margin-desktop py-6 space-y-6"
+            className="flex-1 overflow-y-auto px-margin-mobile md:px-margin-desktop py-6 space-y-6"
           >
             <div className="space-y-2">
               <span className="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase font-bold">
                 {stepNum} · {stepSlug}
               </span>
-              <h1 className="font-headline-xl text-headline-xl text-on-surface">{step.title}</h1>
+              <h1 className="font-headline-xl text-headline-lg md:text-headline-xl text-on-surface break-words">{step.title}</h1>
               <div className="font-label-sm text-label-sm text-on-surface-variant opacity-70 flex items-center gap-1.5">
                 <span>attempts {stepRec.attempts}</span>
                 <span aria-hidden="true">·</span>
@@ -371,16 +407,18 @@ export function StepView({ step, platformState, onStateChange, exposeApi }: Prop
               />
             </div>
           </div>
-          <ActionBar
-            running={running}
-            onRun={() => void runCode()}
-            onReset={onReset}
-            onHint={onHint}
-          />
         </section>
 
-        {/* RIGHT 40%: challenge + preview + banner + console */}
-        <section className="w-2/5 h-full flex flex-col bg-surface-container-low overflow-y-auto px-margin-desktop py-6 space-y-5 min-w-0">
+        {/* RIGHT 40%: challenge + preview + banner + console.
+            md+: 40% column. <md: visible only when Output tab is active. */}
+        <section
+          className={`
+            w-full md:w-2/5 h-full flex-col bg-surface-container-low
+            overflow-y-auto px-margin-mobile md:px-margin-desktop py-6 space-y-5 min-w-0
+            md:flex
+            ${mobileTab === 'output' ? 'flex' : 'hidden md:flex'}
+          `}
+        >
           <ChallengePanel jsx={step.jsxChallenge} expectedHtml={step.expectedHtml} />
 
           <div className="flex-1 flex flex-col space-y-3 min-h-[200px]">
@@ -399,6 +437,53 @@ export function StepView({ step, platformState, onStateChange, exposeApi }: Prop
           <ConsolePanel lines={consoleLines} />
         </section>
       </div>
+
+      {/* ActionBar pinned at the bottom of the viewport — always visible,
+          regardless of which mobile tab is active, so the learner can Run
+          from anywhere. At md+ this used to live inside the left section;
+          moving it out to the StepView root means a single Run button
+          spans the whole width and is reachable while looking at output. */}
+      <ActionBar
+        running={running}
+        onRun={() => void runCode()}
+        onReset={onReset}
+        onHint={onHint}
+      />
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+  badge,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: string;
+  label: string;
+  badge?: 'pass' | 'fail' | null;
+}) {
+  // Underline-style tab (Material-ish). Active tab gets the amber accent
+  // matching the rest of the platform's "active" colour language.
+  const base =
+    'flex-1 flex items-center justify-center gap-2 py-3 font-label-sm text-label-sm uppercase tracking-wider transition-colors cursor-pointer';
+  const tone = active
+    ? 'text-tertiary border-b-2 border-tertiary -mb-px'
+    : 'text-on-surface-variant border-b-2 border-transparent hover:text-on-surface';
+  const badgeDot =
+    badge === 'pass'
+      ? <span className="w-1.5 h-1.5 rounded-full bg-pass shrink-0" aria-hidden="true" />
+      : badge === 'fail'
+        ? <span className="w-1.5 h-1.5 rounded-full bg-error shrink-0" aria-hidden="true" />
+        : null;
+  return (
+    <button type="button" role="tab" aria-selected={active} onClick={onClick} className={`${base} ${tone}`}>
+      <span className="material-symbols-outlined text-sm">{icon}</span>
+      {label}
+      {badgeDot}
+    </button>
   );
 }
