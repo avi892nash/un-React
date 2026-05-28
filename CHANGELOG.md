@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/avi892nash/un-React/compare/v1.1.1...v1.2.0) (2026-05-28)
+
+### Features
+
+* **ui:** responsive layout — drawer sidebar + tabbed mobile view ([#9](https://github.com/avi892nash/un-React/issues/9)) ([75ab713](https://github.com/avi892nash/un-React/commit/75ab713349384b208985fa493df16d6834ca864e))
+
 ## [1.1.1](https://github.com/avi892nash/un-React/compare/v1.1.0...v1.1.1) (2026-05-28)
 
 ### Bug Fixes
