@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/avi892nash/un-React/compare/v1.0.4...v1.1.0) (2026-05-28)
+
+### Features
+
+* sidebar overhaul + persistence + scoring + completion page ([#7](https://github.com/avi892nash/un-React/issues/7)) ([11a6dd2](https://github.com/avi892nash/un-React/commit/11a6dd22c6d09a6954318493e33a527951a93593))
+
 ## [1.0.4](https://github.com/avi892nash/un-React/compare/v1.0.3...v1.0.4) (2026-05-25)
 
 ### Bug Fixes
