@@ -1,4 +1,6 @@
-# un-React tutorial platform
+<p align="center">
+  <img src="public/logo-wordmark.png" alt="un-React" width="640" />
+</p>
 
 An interactive, step-by-step curriculum that teaches developers how to build a React-like framework from scratch. Read a concept on the left → write the missing piece in the editor → click **Run** → your code is Babel-transpiled, executed in a sandboxed iframe, and the rendered DOM is structurally diffed against the expected output. Pass → next step unlocks.
 

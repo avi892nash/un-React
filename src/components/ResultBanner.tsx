@@ -40,15 +40,20 @@ function presetFor(state: RunState): { preset: Preset; result?: RunResult } {
 
 export function ResultBanner({ state }: Props) {
   const { preset, result } = presetFor(state);
+  const isBusy = state.kind === 'compiling' || state.kind === 'running';
 
   return (
     <div
+      // Re-key on the discriminated state so the rise-in animation replays
+      // each time the user goes idle → busy → done. Skips a re-mount when
+      // only RunResult internals change (none today).
+      key={state.kind}
       role="status"
       aria-live="polite"
-      className={`p-4 rounded border-l-4 ${preset.border} ${preset.bg} flex items-start gap-3`}
+      className={`p-4 rounded border-l-4 ${preset.border} ${preset.bg} flex items-start gap-3 animate-rise-in`}
     >
       <span
-        className={`material-symbols-outlined ${preset.iconColor} shrink-0 mt-0.5`}
+        className={`material-symbols-outlined ${preset.iconColor} shrink-0 mt-0.5 ${isBusy ? 'animate-spin' : ''}`}
         style={preset.filled ? { fontVariationSettings: "'FILL' 1" } : undefined}
       >
         {preset.icon}

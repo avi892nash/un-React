@@ -33,12 +33,18 @@ The platform provides a tiny \`render\` function that walks the tree and mounts 
   prevCode: '',
 
   starterCode: `function createElement(type, props, ...children) {
-  // TODO: return { type, props: { ...props, children: [...normalized children] } }
-  // Children that are strings/numbers should be wrapped via createTextElement.
+  // Return an object that describes this DOM node — what it is, the
+  // attributes it should carry, and the children that go inside it.
+  //
+  // Heads-up: children arrive as a mix of element objects (from nested
+  // createElement calls) and primitives (strings, numbers). Mixing shapes
+  // will break the renderer; every child needs the same wrapper.
 }
 
 function createTextElement(value) {
-  // TODO: return { type: "TEXT_ELEMENT", props: { nodeValue: value, children: [] } }
+  // Wrap a primitive into a node of its own so the renderer can treat
+  // every child uniformly. There's no real DOM element involved yet —
+  // that comes later when render() walks the tree.
 }
 `,
 

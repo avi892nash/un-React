@@ -1,13 +1,30 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import steps from './steps';
-import type { ConsoleLine, NavId } from './types';
+import type { ConsoleLine } from './types';
+import {
+  type PlatformState,
+  loadState,
+  saveState,
+} from './lib/storage';
+import { isAllPassed } from './lib/scoring';
 import { TopBar } from './components/TopBar';
 import { SideNav } from './components/SideNav';
 import { StepView, type StepViewApi } from './components/StepView';
+import { CompletionView } from './components/CompletionView';
+import { SettingsDialog } from './components/SettingsDialog';
+
+type View = 'curriculum' | 'completion';
 
 export default function App() {
-  const [active, setActive] = useState<NavId>('curriculum');
-  const [stepIndex] = useState(0); // multi-step nav comes when curriculum has > 1 step
+  // Single source of truth for everything persisted (per-step attempts /
+  // hints / passed, candidate name, VDOM toggle). Loaded once from
+  // localStorage; saved on every change. Children dispatch via setState.
+  const [platformState, setPlatformState] = useState<PlatformState>(() => loadState());
+  useEffect(() => { saveState(platformState); }, [platformState]);
+
+  const [view, setView] = useState<View>('curriculum');
+  const [showSettings, setShowSettings] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
   const apiRef = useRef<StepViewApi | null>(null);
 
   const step = steps[stepIndex];
@@ -19,40 +36,25 @@ export default function App() {
     );
   }
 
+  const stepIds = steps.map((s) => s.id);
+  const allPassed = isAllPassed(platformState, stepIds);
+  const passedStepIds = new Set(
+    stepIds.filter((id) => platformState.perStep[id]?.passed),
+  );
+
+  // Auto-jump to completion the moment the user passes the last step. Only
+  // fires once per session — once they've seen it they can navigate freely.
+  const announcedCompletionRef = useRef(false);
+  useEffect(() => {
+    if (allPassed && !announcedCompletionRef.current) {
+      announcedCompletionRef.current = true;
+      setView('completion');
+    }
+  }, [allPassed]);
+
   const setConsole = useCallback((lines: ConsoleLine[]) => {
     apiRef.current?.setConsoleLines(lines);
   }, []);
-
-  const onNav = useCallback(
-    (id: NavId) => {
-      setActive(id);
-      const api = apiRef.current;
-      if (!api) return;
-      switch (id) {
-        case 'curriculum':
-          api.scrollToTop();
-          break;
-        case 'editor':
-          api.focusEditor();
-          break;
-        case 'reference':
-          api.setConsoleLines([
-            { kind: 'system', text: '[reference] canonical un-React source:' },
-            { kind: 'info', text: '  the existing repo root index.js (~310 lines)' },
-            { kind: 'info', text: '  contains the full framework you are reconstructing.' },
-            { kind: 'info', text: '  (a built-in viewer is coming in a future iteration.)' },
-          ]);
-          break;
-        case 'community':
-          api.setConsoleLines([
-            { kind: 'system', text: '[community] not wired up yet.' },
-            { kind: 'info', text: '  future: discussion + share-your-solution.' },
-          ]);
-          break;
-      }
-    },
-    [],
-  );
 
   const onHelp = useCallback(() => {
     setConsole([
@@ -63,32 +65,56 @@ export default function App() {
     ]);
   }, [setConsole]);
 
-  const onSettings = useCallback(() => {
-    setConsole([
-      { kind: 'system', text: '[settings] no configurable options yet.' },
-      { kind: 'info', text: '  future: theme toggle, font size, autorun on save.' },
-    ]);
-  }, [setConsole]);
-
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background text-on-background">
       <TopBar
         step={stepIndex + 1}
         total={steps.length}
         onHelp={onHelp}
-        onSettings={onSettings}
+        onSettings={() => setShowSettings(true)}
       />
       <div className="flex flex-1 overflow-hidden">
-        <SideNav active={active} onSelect={onNav} />
+        <SideNav
+          steps={steps}
+          currentStepId={step.id}
+          passedStepIds={passedStepIds}
+          allPassed={allPassed}
+          activeView={view}
+          onSelectStep={(id) => {
+            const idx = steps.findIndex((s) => s.id === id);
+            if (idx >= 0) {
+              setStepIndex(idx);
+              setView('curriculum');
+            }
+          }}
+          onSelectCompletion={() => setView('completion')}
+          onSelectCurriculum={() => setView('curriculum')}
+        />
         <main className="flex-1 flex overflow-hidden min-w-0">
-          <StepView
-            step={step}
-            exposeApi={(api) => {
-              apiRef.current = api;
-            }}
-          />
+          {view === 'curriculum' ? (
+            <StepView
+              step={step}
+              platformState={platformState}
+              onStateChange={setPlatformState}
+              exposeApi={(api) => { apiRef.current = api; }}
+            />
+          ) : (
+            <CompletionView
+              steps={steps}
+              platformState={platformState}
+              onStateChange={setPlatformState}
+              onBack={() => setView('curriculum')}
+            />
+          )}
         </main>
       </div>
+      {showSettings && (
+        <SettingsDialog
+          platformState={platformState}
+          onStateChange={setPlatformState}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

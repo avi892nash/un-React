@@ -94,6 +94,38 @@ export default {
         'headline-xl': ['32px', { lineHeight: '40px', letterSpacing: '-0.02em', fontWeight: '600' }],
         'headline-md': ['18px', { lineHeight: '24px', fontWeight: '600' }],
       },
+      keyframes: {
+        // Soft attention pulse on the "you are here" sidebar bullet.
+        // Lower-amplitude than Tailwind's built-in animate-pulse so it
+        // doesn't distract from reading.
+        'bullet-pulse': {
+          '0%, 100%': { transform: 'scale(1)',   boxShadow: '0 0 0 0 rgba(251, 191, 36, 0.55)' },
+          '50%':      { transform: 'scale(1.1)', boxShadow: '0 0 0 6px rgba(251, 191, 36, 0)' },
+        },
+        // Slide-up + fade-in for the result banner and completion view.
+        'rise-in': {
+          '0%':   { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        // Modal/dialog entrance — quick fade with a tiny scale-up to feel
+        // anchored rather than dropped in.
+        'pop-in': {
+          '0%':   { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        // Sidebar new-entry slide — when the Completion row first appears
+        // after the last step passes, slide in from the left.
+        'slide-in-x': {
+          '0%':   { opacity: '0', transform: 'translateX(-12px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+      },
+      animation: {
+        'bullet-pulse': 'bullet-pulse 1.8s ease-in-out infinite',
+        'rise-in':      'rise-in 220ms ease-out both',
+        'pop-in':       'pop-in 160ms ease-out both',
+        'slide-in-x':   'slide-in-x 280ms ease-out both',
+      },
     },
   },
   plugins: [],

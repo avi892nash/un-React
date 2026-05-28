@@ -39,4 +39,3 @@ export type RunState =
   | { kind: 'running' }
   | { kind: 'done'; result: RunResult };
 
-export type NavId = 'curriculum' | 'editor' | 'reference' | 'community';
