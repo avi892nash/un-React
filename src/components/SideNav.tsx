@@ -64,6 +64,13 @@ interface Props {
   allPassed: boolean;
   /** Which top-level view is active — curriculum or completion. */
   activeView: 'curriculum' | 'completion';
+  /** Drawer state. At lg+ the sidebar is always visible and this is ignored.
+   *  At <lg, false hides the drawer offscreen; true slides it in over a
+   *  backdrop. */
+  isOpen: boolean;
+  /** Called from the backdrop, the in-drawer close button, and after any
+   *  in-drawer navigation action so the drawer collapses on mobile. */
+  onClose: () => void;
   onSelectStep: (stepId: string) => void;
   onSelectCompletion: () => void;
   onSelectCurriculum: () => void;
@@ -110,6 +117,8 @@ export function SideNav({
   passedStepIds,
   allPassed,
   activeView,
+  isOpen,
+  onClose,
   onSelectStep,
   onSelectCompletion,
   onSelectCurriculum,
@@ -120,29 +129,67 @@ export function SideNav({
     0,
   );
 
-  return (
-    <aside className="flex flex-col h-full p-unit bg-surface-container-low border-r border-outline-variant w-[280px] shrink-0 hidden lg:flex">
-      <button
-        type="button"
-        onClick={onSelectCurriculum}
-        className="px-4 py-4 flex items-center gap-3 text-left cursor-pointer hover:bg-surface-container-highest"
-      >
-        <img
-          src="/logo-icon.png"
-          alt="un-React"
-          className="w-10 h-10 shrink-0"
-        />
-        <div className="flex flex-col min-w-0">
-          <div className="font-headline-md text-headline-md text-on-surface font-bold leading-tight">
-            un-React
-          </div>
-          <div className="font-label-sm text-label-sm text-on-surface-variant opacity-70">
-            v0.4.2-beta
-          </div>
-        </div>
-      </button>
+  // Every in-drawer action also closes the drawer at <lg. At lg+ onClose
+  // toggles state that's ignored by the CSS, so calling it is a harmless
+  // no-op visually.
+  const handleSelectCurriculum = () => { onSelectCurriculum(); onClose(); };
+  const handleSelectStep = (id: string) => { onSelectStep(id); onClose(); };
+  const handleSelectCompletion = () => { onSelectCompletion(); onClose(); };
 
-      <div className="px-4 py-3 border-y border-outline-variant">
+  return (
+    <>
+      {/* Backdrop — only when open, only at <xl. Clicking it dismisses. */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 xl:hidden animate-rise-in"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`
+          flex flex-col h-full bg-surface-container-low border-r border-outline-variant w-[280px] shrink-0
+          fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          xl:static xl:translate-x-0 xl:transition-none
+        `}
+        aria-label="Curriculum navigation"
+      >
+        {/* Header — logo as a button (back to curriculum) + close X at <lg */}
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleSelectCurriculum}
+            className="flex-1 px-4 py-4 flex items-center gap-3 text-left cursor-pointer hover:bg-surface-container-highest transition-colors"
+          >
+            <img
+              src="/logo-icon.png"
+              alt="un-React"
+              className="w-10 h-10 shrink-0"
+            />
+            <div className="flex flex-col min-w-0">
+              <div className="font-headline-md text-headline-md text-on-surface font-bold leading-tight">
+                un-React
+              </div>
+              <div className="font-label-sm text-label-sm text-on-surface-variant opacity-70">
+                v0.4.2-beta
+              </div>
+            </div>
+          </button>
+          {/* Close X — drawer-mode only; the lg+ persistent sidebar
+              doesn't need a close affordance. */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close navigation"
+            className="p-2 mr-2 xl:hidden text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div className="px-4 py-3 border-y border-outline-variant">
         <div className="flex items-baseline justify-between mb-1.5">
           <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
             Progress
@@ -185,7 +232,7 @@ export function SideNav({
                 // already shown; locked is locked; planned doesn't exist).
                 const onSelect =
                   state === 'available' || state === 'passed'
-                    ? () => onSelectStep(s.id)
+                    ? () => handleSelectStep(s.id)
                     : undefined;
                 return (
                   <StepRow
@@ -213,7 +260,7 @@ export function SideNav({
             <li>
               <button
                 type="button"
-                onClick={allPassed ? onSelectCompletion : undefined}
+                onClick={allPassed ? handleSelectCompletion : undefined}
                 disabled={!allPassed}
                 aria-disabled={!allPassed}
                 aria-current={activeView === 'completion' ? 'page' : undefined}
@@ -256,7 +303,8 @@ export function SideNav({
           <span className="text-on-surface-variant text-xs opacity-60">Level 1: Novice</span>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
